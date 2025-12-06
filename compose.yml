@@ -1,0 +1,25 @@
+services:
+  web-dev:
+    build:
+      context: ./LifeAI
+      target: dev
+    container_name: expo-dev
+    ports:
+      - "8081:8081"    # Web
+      - "19000:19000"  # Expo Dev Tools
+      - "19001:19001"  # Tunnel
+      - "19002:19002"  # Metro Bundler logs
+    volumes:
+      - ./LifeAI:/app         # <- fixed
+    environment:
+      - EXPO_WEB_PORT=8081
+
+  web-prod:
+    build:
+      context: ./LifeAI
+      target: builder
+    container_name: expo-web-prod
+    ports:
+      - "80:80"
+    command: >
+      sh -c "npm run build:web && nginx -g 'daemon off;'"
