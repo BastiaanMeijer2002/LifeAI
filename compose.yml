@@ -10,9 +10,14 @@ services:
       - "19001:19001"  # Tunnel
       - "19002:19002"  # Metro Bundler logs
     volumes:
-      - ./LifeAI:/app         # <- fixed
+      - ./LifeAI:/app
     environment:
       - EXPO_WEB_PORT=8081
+      - KEYCLOAK_URL=http://keycloak:8080
+    depends_on:
+      - keycloak
+    networks:
+      - app-network
 
   web-prod:
     build:
@@ -23,3 +28,63 @@ services:
       - "80:80"
     command: >
       sh -c "npm run build:web && nginx -g 'daemon off;'"
+    environment:
+      - KEYCLOAK_URL=http://keycloak:8080
+    depends_on:
+      - keycloak
+    networks:
+      - app-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    environment:
+      # Admin credentials
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      
+      # Database configuration (using H2 for development)
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_password
+      
+      # Hostname configuration
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
+      
+      # Proxy settings (if behind reverse proxy)
+      KC_PROXY: edge
+    ports:
+      - "8080:8080"
+    command:
+      - start-dev
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: keycloak-postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    ports:
+      - "5432:5432"
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  keycloak_data:
+  postgres_data:
