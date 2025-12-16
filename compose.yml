@@ -13,9 +13,7 @@ services:
       - ./LifeAI:/app
     environment:
       - EXPO_WEB_PORT=8081
-      - KEYCLOAK_URL=http://keycloak:8080
-    depends_on:
-      - keycloak
+      - BACKEND_URL=http://localhost:8000/api
     networks:
       - app-network
 
@@ -28,8 +26,6 @@ services:
       - "80:80"
     command: >
       sh -c "npm run build:web && nginx -g 'daemon off;'"
-    environment:
-      - KEYCLOAK_URL=http://keycloak:8080
     depends_on:
       - keycloak
     networks:

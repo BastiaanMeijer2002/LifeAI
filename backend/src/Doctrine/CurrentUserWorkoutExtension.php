@@ -19,26 +19,22 @@ final class CurrentUserWorkoutExtension implements QueryCollectionExtensionInter
      */
     private function addWhere(QueryBuilder $qb, QueryNameGeneratorInterface $qng, string $resourceClass): void
     {
-        // Only apply for Workout entity
         if ($resourceClass !== Workout::class) {
             return;
         }
 
         $user = $this->security->getUser();
 
-        // No user (e.g. anonymous) → return empty result
         if (!$user) {
             $alias = $qb->getRootAliases()[0];
             $qb->andWhere("$alias.id IS NULL"); // no results
             return;
         }
 
-        // Admin override: ROLE_ADMIN can see all workouts
         if ($this->security->isGranted('ROLE_ADMIN')) {
             return;
         }
 
-        // Normal user: filter by owner
         $alias = $qb->getRootAliases()[0];
         $param = $qng->generateParameterName('owner');
 
