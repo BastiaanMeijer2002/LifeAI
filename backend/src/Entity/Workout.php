@@ -3,13 +3,21 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Post;
+use App\State\WorkoutProcessor;
 use App\Repository\WorkoutRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: WorkoutRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    operations: [
+        new Post(
+            processor: WorkoutProcessor::class
+        )
+    ]
+)]
 class Workout
 {
     #[ORM\Id]
@@ -29,6 +37,7 @@ class Workout
     #[ORM\OneToMany(targetEntity: WorkoutExercise::class, mappedBy: 'workout')]
     private Collection $exercises;
 
+    #[ApiProperty(writable: false)]
     #[ORM\ManyToOne(inversedBy: 'workouts')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $owner = null;
